@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Realtime App</title>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+  </head>
+  <body>
+    <div id="app">
+        <h1>Realtime App</h1>
+        <select v-model="selectedUserId">
+            <option value="">Select User</option>
+            <option v-for="user in users" v-bind:value="user.id">
+                {{ user.username }}
+            </option>
+          </select>
+
+          <label for="">Create Post</label>
+          <textarea v-model="post"></textarea>
+          <button @click="createPost()">Post</button>
+    </div> 
+    
+    
+  </body>
+</html>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.3/socket.io.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.4.2/vue.min.js"></script>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+
+<script>
+
+    new Vue({
+      el: '#app',
+      data: {
+        serviceUrl: 'http://localhost:3000',
+        users: [],
+        selectedUserId: '',
+        post: '',
+      },
+      mounted:function(){
+        this.getUsers();
+      },
+      methods: {
+        getUsers : function(){
+          var self = this;
+          axios.get(self.serviceUrl + '/users')
+            .then(function (response) {
+              console.log(response);
+              self.users = response.data;
+            })
+            .catch(function (error) {
+              console.log(error);
+            });
+        },
+        createPost: function(){
+          var post = {
+              description: this.post,
+              image: '',
+              user_id: this.selectedUserId
+          };
+          
+          axios.post('/post', post)
+          .then(function (response) {
+            console.log(response);
+          })
+          .catch(function (error) {
+            console.log(error);
+          });
+          
+        }
+      }
+    });
+</script>
