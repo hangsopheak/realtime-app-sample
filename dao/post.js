@@ -7,8 +7,8 @@ exports.insertPost = function(post){
                     VALUES(?, ?, ?)';
 		pool.getConnection(function(err, connection){
 			connection.query(sql,[ post.description, post.user_id, post.image], function(err, result){
-				console.log(result);
-				resolve(result);
+                var post = getPostById(result.insertId);
+                resolve(post);
 				connection.release();	
 			})
 		});
@@ -26,3 +26,22 @@ exports.getPosts = function(){
 		});
 	});
 }
+
+exports.getPostById = getPostById;
+
+function getPostById(id){
+    return new Promise(function(resolve, reject){
+        var sql = 'SELECT * FROM posts WHERE id = ?';
+		pool.getConnection(function(err, connection){
+			connection.query(sql, [id], function(err, posts){
+                var post = null;
+                if(posts.length == 1){
+                    post = posts[0];    
+                }
+				resolve(post);
+				connection.release();	
+			})
+		});
+	});
+}
+

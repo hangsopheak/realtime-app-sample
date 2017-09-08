@@ -1,26 +1,31 @@
 var daoPost = require('../dao/post');
 
-var express = require('express');
-var router = express.Router();
+var app = require('express');
+var router = app.Router();
 
-/* GET home page. */
-router.post('/', function(req, res, next) {
-	console.log(req.body);
-	daoPost.insertPost(req.body).then(
-		(data) => {
-			res.json(data);
-		}
-	);
-  	
-});
 
-/*
-router.get('/posts', function(req, res, next) {
-	daoPost.getPosts().then(
-		(data) => {
-			res.json(data);
-		}
-	);
-  	
-}); */
-module.exports = router;
+
+module.exports= function(app,io) {
+	
+		//list post
+		
+		app.post('/post', function(req, res, next) {
+				daoPost.insertPost(req.body).then(
+					(data) => {
+						res.json(data);
+						io.emit('post value', data);
+					}
+				);
+			});
+		
+		app.get('/posts', function(req, res, next) {
+			daoPost.getPosts().then(
+				(data) => {
+					res.json(data);
+				}
+			);
+		});	
+
+
+}
+

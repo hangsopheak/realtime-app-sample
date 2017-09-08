@@ -8,15 +8,20 @@
     <div id="app">
         <h1>Realtime App</h1>
         <select v-model="selectedUserId">
-            <option value="">Select User</option>
-            <option v-for="user in users" v-bind:value="user.id">
-                {{ user.username }}
-            </option>
-          </select>
+          <option value="">Select User</option>
+          <option v-for="user in users" v-bind:value="user.id">
+              {{ user.username }}
+          </option>
+        </select>
 
-          <label for="">Create Post</label>
-          <textarea v-model="post"></textarea>
-          <button @click="createPost()">Post</button>
+        <label for="">Create Post</label>
+        <textarea v-model="post"></textarea>
+        <button @click="createPost()">Post</button>
+        <ul>
+            <li v-for="post in posts">
+                {{post.description}}
+            </li>
+        </ul>  
     </div> 
     
     
@@ -28,7 +33,8 @@
 <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
 
 <script>
-
+  
+// or with import syntax
     new Vue({
       el: '#app',
       data: {
@@ -36,9 +42,19 @@
         users: [],
         selectedUserId: '',
         post: '',
+        posts: [],
+        socket: null
       },
       mounted:function(){
-        this.getUsers();
+        var self = this;  
+        self.getUsers();
+        self.socket =  io(self.serviceUrl);
+        self.socket.on('post value', function(data){
+          if(data.user_id != self.selectedUserId){
+            self.pushNotification({header:'New Post', body: data.description, icon: 'https://i.stack.imgur.com/x5mAb.jpg?s=32&g=1' }); 
+          }
+          self.getAllPosts();
+        });
       },
       methods: {
         getUsers : function(){
@@ -61,13 +77,52 @@
           
           axios.post('/post', post)
           .then(function (response) {
-            console.log(response);
+           // console.log(response);
           })
           .catch(function (error) {
             console.log(error);
           });
           
-        }
+        },
+        getAllPosts: function(){
+          var self = this;
+          axios.get(self.serviceUrl + '/posts')
+            .then(function (response) {
+              self.posts = response.data;
+            })
+            .catch(function (error) {
+              console.log(error);
+            });
+        },
+        pushNotification: function(data){
+          var options = {
+              body: data.body,
+              icon: data.icon
+          }
+
+          console.log(options);
+          if (!("Notification" in window)) {
+              alert("This browser does not support desktop notification");
+            }
+            
+            // Let's check whether notification permissions have already been granted
+            else if (Notification.permission === "granted") {
+              // If it's okay let's create a notification
+              var notification = new Notification(data.header, options);
+            }
+
+            // Otherwise, we need to ask the user for permission
+            else if (Notification.permission !== "denied") {
+              Notification.requestPermission(function (permission) {
+                // If the user accepts, let's create a notification
+                if (permission === "granted") {
+                  var notification = new Notification(data.header, options);
+                }
+              });
+          }
+
+
+        } //close push
       }
     });
 </script>
